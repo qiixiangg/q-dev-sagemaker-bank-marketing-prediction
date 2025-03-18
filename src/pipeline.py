@@ -1,22 +1,25 @@
 """
 Main pipeline script that orchestrates the ML workflow.
 """
+import os
+import sys
 from pathlib import Path
 
-from data.data_processor import DataProcessor
-from training.model_trainer import ModelTrainer
-from monitoring.model_monitor import ModelMonitor
-from utils.logger import get_logger
-from utils.config import get_data_config, get_model_config, ensure_directories
+# Add the project root directory to Python path
+project_root = str(Path(__file__).resolve().parent.parent)
+sys.path.insert(0, project_root)
+
+from src.data.data_processor import DataProcessor
+from src.training.model_trainer import ModelTrainer
+from src.monitoring.model_monitor import ModelMonitor
+from src.utils.logger import get_logger
+from src.utils.config import get_data_config, get_model_config, ensure_directories
 
 logger = get_logger(__name__)
 
 def run_pipeline() -> None:
     """
     Run the complete ML pipeline.
-    
-    Args:
-        config: Hydra configuration
     """
     try:
         logger.info("Starting ML pipeline")

@@ -40,6 +40,7 @@ def sample_data():
         'pdays': [999, 6, 999],
         'previous': [0, 1, 2],
         'poutcome': ['unknown', 'success', 'failure'],
+        'duration': [120, 240, 360],  # Added duration
         'emp.var.rate': [-1.8, 1.1, 1.4],
         'cons.price.idx': [92.893, 93.994, 93.444],
         'cons.conf.idx': [-46.2, -36.4, -41.8],

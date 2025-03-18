@@ -34,6 +34,10 @@ A production-ready machine learning pipeline for predicting bank marketing campa
 ### Local Development
 - Python 3.8+
 - pip
+- For macOS users:
+  ```bash
+  brew install libomp  # Required for XGBoost
+  ```
 
 ### Docker Development
 - Docker
@@ -45,8 +49,8 @@ A production-ready machine learning pipeline for predicting bank marketing campa
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/bank-marketing-prediction.git
-cd bank-marketing-prediction
+git clone https://github.com/qiixiangg/q-dev-sagemaker-bank-marketing-prediction.git
+cd q-dev-sagemaker-bank-marketing-prediction
 ```
 
 2. Create and activate a virtual environment:
@@ -79,28 +83,81 @@ docker-compose up pipeline
 
 ## Development
 
-### Running Tests
+### Testing Guide
 
-Local:
+#### Local Testing Setup
+
+1. Install test dependencies:
 ```bash
-python -m pytest tests/
+pip install pytest pytest-cov black flake8
 ```
 
-Docker:
+2. Run all tests with coverage:
 ```bash
-docker-compose run test
+# From project root
+python -m pytest tests/ --cov=src --cov-report=term-missing
 ```
 
-### Running Linting Checks
+3. Run specific test files:
+```bash
+# Test data processing
+python -m pytest tests/test_data_processor.py -v
 
-Local:
+# Test model training
+python -m pytest tests/test_model_trainer.py -v
+
+# Test model monitoring
+python -m pytest tests/test_model_monitor.py -v
+```
+
+4. Run tests with detailed output:
+```bash
+python -m pytest -v --cov=src --cov-report=term-missing tests/
+```
+
+#### Code Quality Checks
+
+1. Run code formatting:
+```bash
+# Check formatting
+black --check src/ tests/
+
+# Apply formatting
+black src/ tests/
+```
+
+2. Run linting:
 ```bash
 flake8 src/ tests/
 ```
 
-Docker:
+#### Docker Testing
+
+1. Run all tests in Docker:
 ```bash
-docker-compose run test lint
+docker-compose run test
+```
+
+2. Run specific test file in Docker:
+```bash
+docker-compose run test python -m pytest tests/test_data_processor.py -v
+```
+
+3. Run tests with linting:
+```bash
+docker-compose run test sh -c "flake8 src/ tests/ && pytest tests/"
+```
+
+#### Continuous Testing During Development
+
+1. Install pytest-watch for continuous testing:
+```bash
+pip install pytest-watch
+```
+
+2. Run tests automatically on file changes:
+```bash
+ptw tests/ -- --cov=src --cov-report=term-missing
 ```
 
 ### Starting Jupyter Lab
@@ -146,33 +203,92 @@ Configuration is managed through Python dictionaries in `src/utils/config.py`. T
 - `monitor`: Model monitoring service
 - `jupyter`: Jupyter Lab environment
 
-## CI/CD Pipeline
+## GitHub Setup and CI/CD Pipeline
 
-The project includes a GitHub Actions workflow that:
+### Initial Setup
 
-1. Runs tests
-2. Performs code quality checks
-3. Builds and pushes Docker images
-4. Deploys to production (when configured)
+1. Fork and clone the repository
+2. Set up GitHub Secrets:
+   - Go to your repository's Settings > Secrets and variables > Actions
+   - Add the following secrets:
+     ```
+     DOCKERHUB_USERNAME: Your Docker Hub username
+     DOCKERHUB_TOKEN: Your Docker Hub access token
+     ```
 
-## Development Workflow
+### CI/CD Pipeline
+
+The project includes a GitHub Actions workflow that automatically:
+
+1. Runs Python tests:
+   - Installs system dependencies (libomp for XGBoost)
+   - Installs Python dependencies
+   - Downloads and prepares data
+   - Runs pytest with coverage
+   - Performs linting checks
+
+2. Runs Docker tests:
+   - Builds and tests Docker containers
+   - Runs the full pipeline in Docker
+   - Verifies container functionality
+
+3. Builds and pushes Docker images (on main branch):
+   - Builds optimized Docker images
+   - Pushes to Docker Hub with version tags
+   - Uses build caching for faster builds
+
+4. Handles deployment (when configured)
+
+### Development Workflow
 
 1. Create a new branch:
 ```bash
 git checkout -b feature/your-feature-name
 ```
 
-2. Make your changes and run tests:
+2. Make your changes and test locally:
 ```bash
+# Run tests
 python -m pytest tests/
-```
 
-3. Format code:
-```bash
+# Format code
 black src/ tests/
+flake8 src/ tests/
+
+# Test the full pipeline
+python scripts/download_data.py
+python src/pipeline.py
 ```
 
-4. Create a pull request
+3. Create a pull request:
+   - The CI pipeline will automatically run tests
+   - All checks must pass before merging
+   - Docker images are built and pushed on merge to main
+
+### Deployment
+
+The pipeline is ready for deployment with:
+- Docker image versioning
+- Build caching
+- Automated testing
+- Directory structure management
+
+To deploy to production:
+1. Merge to main branch
+2. CI/CD pipeline automatically:
+   - Runs all tests
+   - Builds and pushes Docker images
+   - Handles deployment (when configured)
+
+### Monitoring Deployment
+
+Monitor your GitHub Actions:
+1. Go to Actions tab in your repository
+2. Check workflow runs for:
+   - Test results
+   - Build status
+   - Deployment status
+   - Coverage reports
 
 ## Production Deployment
 

@@ -99,23 +99,60 @@ class ModelMonitor:
                 if feature not in current_data.columns:
                     continue
                     
+                # Get baseline and current values for comparison
+                baseline_values = pd.Series([
+                    self.baseline_stats[feature]['mean'],
+                    self.baseline_stats[feature]['median'],
+                    self.baseline_stats[feature]['q1'],
+                    self.baseline_stats[feature]['q3']
+                ])
+                
+                current_values = pd.Series([
+                    self.current_stats[feature]['mean'],
+                    self.current_stats[feature]['median'],
+                    self.current_stats[feature]['q1'],
+                    self.current_stats[feature]['q3']
+                ])
+                
                 # Perform Kolmogorov-Smirnov test
                 ks_statistic, p_value = stats.ks_2samp(
                     current_data[feature].dropna(),
-                    pd.Series(self.baseline_stats[feature]['values']).dropna()
+                    baseline_values
+                )
+                
+                # Calculate percentage change in key statistics
+                pct_change_mean = abs(
+                    (self.current_stats[feature]['mean'] - self.baseline_stats[feature]['mean'])
+                    / self.baseline_stats[feature]['mean']
+                ) * 100
+                
+                pct_change_std = abs(
+                    (self.current_stats[feature]['std'] - self.baseline_stats[feature]['std'])
+                    / self.baseline_stats[feature]['std']
+                ) * 100
+                
+                # Check for drift based on statistical test and significant changes
+                is_drifted = (
+                    p_value < threshold or 
+                    pct_change_mean > 50 or    # More significant mean change threshold
+                    pct_change_std > 100       # More significant std change threshold
                 )
                 
                 drift_stats[feature] = {
-                    'ks_statistic': ks_statistic,
-                    'p_value': p_value,
-                    'is_drifted': p_value < threshold
+                    'ks_statistic': float(ks_statistic),
+                    'p_value': float(p_value),
+                    'pct_change_mean': float(pct_change_mean),
+                    'pct_change_std': float(pct_change_std),
+                    'is_drifted': is_drifted
                 }
                 
-                if p_value < threshold:
+                if is_drifted:
                     drifted_features.append(feature)
                     logger.warning(
                         f"Detected drift in feature {feature} "
-                        f"(p-value: {p_value:.4f})"
+                        f"(p-value: {p_value:.4f}, "
+                        f"mean_change: {pct_change_mean:.2f}%, "
+                        f"std_change: {pct_change_std:.2f}%)"
                     )
                     
             return drift_stats, drifted_features
@@ -180,11 +217,23 @@ class ModelMonitor:
             output_dir = Path(output_dir)
             output_dir.mkdir(parents=True, exist_ok=True)
             
+            # Convert numpy types to Python native types
+            def convert_to_native(obj):
+                if isinstance(obj, (np.integer, np.floating)):
+                    return float(obj)
+                elif isinstance(obj, np.bool_):
+                    return bool(obj)
+                elif isinstance(obj, dict):
+                    return {k: convert_to_native(v) for k, v in obj.items()}
+                elif isinstance(obj, (list, tuple)):
+                    return [convert_to_native(x) for x in obj]
+                return obj
+
             report = {
                 'timestamp': pd.Timestamp.now().isoformat(),
-                'drift_statistics': drift_stats,
-                'performance_metrics': performance_metrics,
-                'needs_retraining': (
+                'drift_statistics': convert_to_native(drift_stats),
+                'performance_metrics': convert_to_native(performance_metrics),
+                'needs_retraining': bool(
                     len([f for f in drift_stats.values() if f['is_drifted']]) > 0
                     or performance_metrics['below_threshold']
                 )

@@ -41,7 +41,18 @@ class DataProcessor:
             Loaded DataFrame
         """
         try:
-            df = pd.read_csv(filepath, sep=';')
+            # Read CSV with proper handling of quotes and separators
+            df = pd.read_csv(
+                filepath,
+                sep=';',
+                quotechar='"',
+                doublequote=True,
+                encoding='utf-8'
+            )
+            
+            # Clean column names (remove quotes if present)
+            df.columns = df.columns.str.strip('"')
+            
             logger.info(f"Successfully loaded data from {filepath}")
             return df
         except Exception as e:
@@ -59,10 +70,13 @@ class DataProcessor:
             Processed DataFrame
         """
         try:
+            # Convert target to binary
+            df['y'] = (df['y'] == 'yes').astype(int)
+            
             # Create derived features
             df["no_previous_contact"] = np.where(df["pdays"] == 999, 1, 0)
             df["not_working"] = np.where(
-                np.isin(df["job"], ["student", "retired", "unemployed"]), 1, 0
+                df["job"].isin(["student", "retired", "unemployed"]), 1, 0
             )
             
             # Drop unnecessary columns
@@ -72,35 +86,36 @@ class DataProcessor:
             bins = [18, 30, 40, 50, 60, 70, 90]
             labels = ['18-29', '30-39', '40-49', '50-59', '60-69', '70-plus']
             df_processed['age_range'] = pd.cut(
-                df_processed.age, 
+                df_processed['age'].astype(float), 
                 bins, 
                 labels=labels, 
                 include_lowest=True
             )
             
             # Create age range dummies and drop original columns
-            df_processed = pd.concat(
-                [df_processed, pd.get_dummies(df_processed['age_range'], prefix='age', dtype=int)],
-                axis=1
-            )
+            age_dummies = pd.get_dummies(df_processed['age_range'], prefix='age', dtype=int)
+            df_processed = pd.concat([df_processed, age_dummies], axis=1)
             df_processed.drop(['age', 'age_range'], axis=1, inplace=True)
             
-            # Scale numeric features
-            df_processed[self.numeric_features] = self.scaler.fit_transform(
-                df_processed[self.numeric_features]
+            # Scale remaining numeric features
+            numeric_features = [f for f in self.numeric_features if f != 'age']
+            if numeric_features:
+                df_processed[numeric_features] = self.scaler.fit_transform(
+                    df_processed[numeric_features]
+                )
+            
+            # Convert categorical variables to indicators
+            categorical_cols = df_processed.select_dtypes(include=['object']).columns
+            df_processed = pd.get_dummies(
+                df_processed,
+                columns=categorical_cols,
+                dtype=int
             )
             
-            # Convert all categorical variables to indicators
-            df_processed = pd.get_dummies(df_processed, dtype=int)
-            
-            # Move target to front
-            df_processed = pd.concat(
-                [
-                    df_processed["y_yes"].rename(self.target),
-                    df_processed.drop(["y_no", "y_yes"], axis=1),
-                ],
-                axis=1,
-            )
+            # Ensure target column is first
+            cols = df_processed.columns.tolist()
+            cols.remove('y')
+            df_processed = df_processed[['y'] + cols]
             
             logger.info("Successfully processed data")
             return df_processed
