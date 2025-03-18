@@ -9,7 +9,8 @@ services:
       - ./logs:/app/logs
     environment:
       - ENVIRONMENT=production
-    command: run
+      - PYTHONPATH=/app
+    command: python src/pipeline.py
 
   test:
     build: 
@@ -17,7 +18,9 @@ services:
       target: development
     volumes:
       - .:/app
-    command: test
+    environment:
+      - PYTHONPATH=/app
+    command: python -m pytest tests/ --cov=src --cov-report=xml
 
   monitor:
     build: .
@@ -25,7 +28,9 @@ services:
       - ./data:/app/data
       - ./models:/app/models
       - ./logs:/app/logs
-    command: monitor
+    environment:
+      - PYTHONPATH=/app
+    command: python src/monitoring/model_monitor.py
 
   dev:
     build:
@@ -38,7 +43,7 @@ services:
       - PYTHONPATH=/app
     ports:
       - "8888:8888"  # For Jupyter notebook
-    command: dev
+    command: /bin/bash
 
   jupyter:
     build:
@@ -54,4 +59,4 @@ services:
 
 networks:
   default:
-    name: ml_pipeline_network
+    name: bank_marketing_network

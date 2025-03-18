@@ -1,19 +1,17 @@
 """
 Main pipeline script that orchestrates the ML workflow.
 """
-import hydra
-from omegaconf import DictConfig
 from pathlib import Path
 
 from data.data_processor import DataProcessor
 from training.model_trainer import ModelTrainer
 from monitoring.model_monitor import ModelMonitor
 from utils.logger import get_logger
+from utils.config import get_data_config, get_model_config, ensure_directories
 
 logger = get_logger(__name__)
 
-@hydra.main(config_path="../config", config_name="config")
-def run_pipeline(config: DictConfig) -> None:
+def run_pipeline() -> None:
     """
     Run the complete ML pipeline.
     
@@ -23,24 +21,31 @@ def run_pipeline(config: DictConfig) -> None:
     try:
         logger.info("Starting ML pipeline")
         
+        # Get configurations
+        data_config = get_data_config()
+        model_config = get_model_config()
+        
+        # Ensure directories exist
+        ensure_directories()
+        
         # Initialize components
-        data_processor = DataProcessor(config.data)
-        model_trainer = ModelTrainer(config.model)
-        model_monitor = ModelMonitor(config.model)
+        data_processor = DataProcessor(data_config)
+        model_trainer = ModelTrainer(model_config)
+        model_monitor = ModelMonitor(model_config)
         
         # Data Processing
         logger.info("Starting data processing")
         raw_data = data_processor.load_data(
-            Path(config.data.raw_data.local_path) / config.data.raw_data.filename
+            Path(data_config["raw_data"]["local_path"]) / data_config["raw_data"]["filename"]
         )
         processed_data = data_processor.process_data(raw_data)
         
         # Split data
         train_data, val_data, test_data = data_processor.split_data(
             processed_data,
-            train_size=config.data.split.train_size,
-            val_size=config.data.split.val_size,
-            random_state=config.data.split.random_state
+            train_size=data_config["split"]["train_size"],
+            val_size=data_config["split"]["val_size"],
+            random_state=data_config["split"]["random_state"]
         )
         
         # Save processed datasets
@@ -48,7 +53,7 @@ def run_pipeline(config: DictConfig) -> None:
             train_data,
             val_data,
             test_data,
-            config.data.processed_data.path
+            data_config["processed_data"]["path"]
         )
         logger.info("Completed data processing")
         
@@ -58,7 +63,7 @@ def run_pipeline(config: DictConfig) -> None:
             train_data,
             val_data,
             test_data,
-            target_col=config.data.features.target
+            target_col=data_config["features"]["target"]
         )
         
         # Cross-validation
@@ -70,36 +75,36 @@ def run_pipeline(config: DictConfig) -> None:
         # Evaluate model
         test_auc, predictions, confusion_matrix = model_trainer.evaluate(
             dtest,
-            test_data[config.data.features.target]
+            test_data[data_config["features"]["target"]]
         )
         
         # Save model
-        model_trainer.save_model(config.model.model_registry.save_path)
+        model_trainer.save_model(model_config["model_registry"]["save_path"])
         logger.info("Completed model training")
         
         # Model Monitoring
         logger.info("Starting model monitoring")
         model_monitor.load_baseline(
-            Path(config.data.processed_data.path) / config.data.processed_data.baseline_file
+            Path(data_config["processed_data"]["path"]) / data_config["processed_data"]["baseline_file"]
         )
         
         # Detect data drift
         drift_stats, drifted_features = model_monitor.detect_drift(
-            test_data.drop(config.data.features.target, axis=1)
+            test_data.drop(data_config["features"]["target"], axis=1)
         )
         
         # Monitor performance
         performance_metrics = model_monitor.monitor_performance(
-            test_data[config.data.features.target],
+            test_data[data_config["features"]["target"]],
             predictions,
-            threshold=config.model.model_registry.metadata.threshold
+            threshold=model_config["model_registry"]["metadata"]["threshold"]
         )
         
         # Save monitoring report
         model_monitor.save_monitoring_report(
             drift_stats,
             performance_metrics,
-            config.model.model_registry.save_path
+            model_config["model_registry"]["save_path"]
         )
         logger.info("Completed model monitoring")
         

@@ -1,11 +1,10 @@
-# ML Pipeline for Bank Marketing Prediction
+# Bank Marketing Prediction Pipeline
 
-A production-ready machine learning pipeline for predicting bank marketing campaign success. This project implements a complete MLOps workflow using Docker containers.
+A production-ready machine learning pipeline for predicting bank marketing campaign success. This project implements a complete MLOps workflow with both local and containerized execution options.
 
 ## Project Structure
 
 ```
-ml_pipeline/
 ├── config/                 # Configuration files
 │   ├── data/              # Data processing configs
 │   └── model/             # Model training configs
@@ -27,23 +26,53 @@ ml_pipeline/
 - Comprehensive test suite
 - CI/CD pipeline with GitHub Actions
 - Docker containerization
-- Configurable with Hydra
+- Simple configuration management
 - Logging and experiment tracking
 
 ## Requirements
 
+### Local Development
+- Python 3.8+
+- pip
+
+### Docker Development
 - Docker
 - Docker Compose
 
 ## Quick Start
 
+### Local Development
+
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/ml_pipeline.git
-cd ml_pipeline
+git clone https://github.com/yourusername/bank-marketing-prediction.git
+cd bank-marketing-prediction
 ```
 
-2. Start the pipeline:
+2. Create and activate a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+4. Download the data:
+```bash
+python scripts/download_data.py
+```
+
+5. Run the pipeline:
+```bash
+python src/pipeline.py
+```
+
+### Docker Development
+
+1. Build and start the pipeline:
 ```bash
 docker-compose up pipeline
 ```
@@ -52,65 +81,76 @@ docker-compose up pipeline
 
 ### Running Tests
 
+Local:
+```bash
+python -m pytest tests/
+```
+
+Docker:
 ```bash
 docker-compose run test
 ```
 
 ### Running Linting Checks
 
+Local:
+```bash
+flake8 src/ tests/
+```
+
+Docker:
 ```bash
 docker-compose run test lint
 ```
 
-### Starting Development Environment
-
-```bash
-docker-compose up dev
-```
-
 ### Starting Jupyter Lab
 
+Local:
+```bash
+jupyter lab
+```
+
+Docker:
 ```bash
 docker-compose up jupyter
 ```
 
-Then open http://localhost:8888 in your browser. The token will be shown in the console output.
+Then open http://localhost:8888 in your browser.
 
 ## Model Monitoring
 
 Start the monitoring service:
 
+Local:
+```bash
+python src/monitoring/model_monitor.py
+```
+
+Docker:
 ```bash
 docker-compose up monitor
 ```
 
 ## Configuration
 
-The project uses Hydra for configuration management. Main configuration files:
+Configuration is managed through Python dictionaries in `src/utils/config.py`. The main configuration sections are:
 
-- `config/data/default.yaml`: Data processing settings
-- `config/model/default.yaml`: Model training parameters
-- `config/monitoring/default.yaml`: Monitoring thresholds and settings
-
-Example of running with custom configuration:
-
-```bash
-docker-compose run pipeline python src/pipeline.py model.xgboost.params.max_depth=5
-```
+- Data processing settings
+- Model training parameters
+- Monitoring thresholds and settings
 
 ## Docker Services
 
 - `pipeline`: Main ML pipeline
 - `test`: Run tests and linting
 - `monitor`: Model monitoring service
-- `dev`: Development environment
 - `jupyter`: Jupyter Lab environment
 
 ## CI/CD Pipeline
 
 The project includes a GitHub Actions workflow that:
 
-1. Runs tests in Docker containers
+1. Runs tests
 2. Performs code quality checks
 3. Builds and pushes Docker images
 4. Deploys to production (when configured)
@@ -124,28 +164,27 @@ git checkout -b feature/your-feature-name
 
 2. Make your changes and run tests:
 ```bash
-docker-compose run test
+python -m pytest tests/
 ```
 
 3. Format code:
 ```bash
-docker-compose run test format
+black src/ tests/
 ```
 
 4. Create a pull request
 
 ## Production Deployment
 
-Build the production image:
-
+Local:
 ```bash
-docker build -t ml-pipeline:latest .
+python src/pipeline.py
 ```
 
-Run the pipeline in production:
-
+Docker:
 ```bash
-docker run -v $(pwd)/data:/app/data -v $(pwd)/models:/app/models ml-pipeline:latest
+docker build -t bank-marketing:latest .
+docker run -v $(pwd)/data:/app/data -v $(pwd)/models:/app/models bank-marketing:latest
 ```
 
 ## Contributing

@@ -1,19 +1,16 @@
 """
 Script to download and prepare the bank marketing dataset.
 """
-import os
 import urllib.request
 import zipfile
 from pathlib import Path
 
-import hydra
-from omegaconf import DictConfig
-
 from src.utils.logger import get_logger
+from src.utils.config import get_data_config, ensure_directories
 
 logger = get_logger(__name__)
 
-def download_file(url: str, filepath: Path) -> None:
+def download_file(url: str, filepath: str) -> None:
     """
     Download a file from a URL.
     
@@ -29,7 +26,7 @@ def download_file(url: str, filepath: Path) -> None:
         logger.error(f"Error downloading file: {str(e)}")
         raise
 
-def extract_zip(zip_path: Path, extract_path: Path) -> None:
+def extract_zip(zip_path: str, extract_path: str) -> None:
     """
     Extract a zip file.
     
@@ -46,33 +43,30 @@ def extract_zip(zip_path: Path, extract_path: Path) -> None:
         logger.error(f"Error extracting file: {str(e)}")
         raise
 
-@hydra.main(config_path="../config", config_name="config")
-def main(config: DictConfig) -> None:
-    """
-    Download and prepare the dataset.
-    
-    Args:
-        config: Hydra configuration
-    """
+def main() -> None:
+    """Download and prepare the dataset."""
     try:
         logger.info("Starting data download")
         
-        # Create data directories
-        raw_data_path = Path(config.data.raw_data.local_path)
-        raw_data_path.mkdir(parents=True, exist_ok=True)
+        # Get configuration and ensure directories exist
+        data_config = get_data_config()
+        ensure_directories()
+        
+        # Set paths
+        raw_data_path = Path(data_config["raw_data"]["local_path"])
         
         # Download data
         zip_path = raw_data_path / "bank-marketing.zip"
         if not zip_path.exists():
-            download_file(config.data.raw_data.url, zip_path)
+            download_file(data_config["raw_data"]["url"], str(zip_path))
         
         # Extract data
-        extract_zip(zip_path, raw_data_path)
+        extract_zip(str(zip_path), str(raw_data_path))
         
         # Extract nested zip if it exists
         additional_zip = raw_data_path / "bank-additional.zip"
         if additional_zip.exists():
-            extract_zip(additional_zip, raw_data_path)
+            extract_zip(str(additional_zip), str(raw_data_path))
         
         logger.info("Data preparation completed successfully")
         
