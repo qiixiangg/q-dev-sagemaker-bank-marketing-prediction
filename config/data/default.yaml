@@ -1,0 +1,42 @@
+raw_data:
+  url: "https://archive.ics.uci.edu/static/public/222/bank+marketing.zip"
+  local_path: "data/raw"
+  filename: "bank-additional-full.csv"
+
+processed_data:
+  path: "data/processed"
+  train_file: "train.csv"
+  val_file: "validation.csv"
+  test_file: "test.csv"
+  baseline_file: "baseline.csv"
+
+features:
+  target: "y"
+  numeric:
+    - "age"
+    - "campaign"
+    - "pdays"
+    - "previous"
+  categorical:
+    - "job"
+    - "marital"
+    - "education"
+    - "default"
+    - "housing"
+    - "loan"
+    - "contact"
+    - "month"
+    - "poutcome"
+  drop:
+    - "duration"
+    - "emp.var.rate"
+    - "cons.price.idx"
+    - "cons.conf.idx"
+    - "euribor3m"
+    - "nr.employed"
+
+split:
+  train_size: 0.7
+  val_size: 0.2
+  test_size: 0.1
+  random_state: 1729
