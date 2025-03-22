@@ -1,246 +1,205 @@
-# Bank Marketing Prediction Pipeline
+# Bank Marketing Prediction Project
 
-A production-ready machine learning pipeline for predicting bank marketing campaign success. This project implements a complete MLOps workflow with both local and containerized execution options.
+This project demonstrates a real-world machine learning workflow for predicting bank marketing campaign success, focusing on two main roles:
+
+1. Data Scientist (DS) workflow for model development
+2. Machine Learning Engineer (MLE) workflow for model deployment
 
 ## Project Structure
 
 ```
-├── src/                   # Source code
-│   ├── data/              # Data processing modules
-│   ├── training/          # Model training modules
-│   ├── monitoring/        # Model monitoring modules
-│   └── utils/             # Utility functions
-├── tests/                 # Test suite
-├── notebooks/             # Jupyter notebooks
-└── scripts/               # Utility scripts
+├── data/                  # Data directory
+│   └── raw/              # Raw data files
+├── models/               # Saved models and artifacts
+│   ├── xgboost_model.json       # Trained model
+│   └── model_metadata.json      # Model metadata
+├── notebooks/            # Jupyter notebooks for DS workflow
+│   ├── model_development.ipynb  # Main DS notebook
+│   ├── mlruns/              # MLflow experiment tracking
+│   └── mlflow.db            # MLflow tracking database
+├── src/                  # Source code
+│   └── serving/         # Model serving (MLE)
+│       ├── __init__.py
+│       ├── app.py       # FastAPI application
+│       └── model_serving.py  # Model serving logic
+├── scripts/             # Utility scripts
+│   └── run_api.py       # API startup script
+└── requirements.txt     # Project dependencies
 ```
 
-## Features
+## Data Science Workflow
 
-- Automated data preprocessing and feature engineering
-- XGBoost model training with cross-validation
-- Model performance monitoring and drift detection
-- Comprehensive test suite
-- CI/CD pipeline with GitHub Actions
-- Docker containerization
-- Simple configuration management
-- Logging and experiment tracking
+The Data Science workflow is documented in `notebooks/model_development.ipynb` and includes:
 
-## Requirements
+1. Data Collection & Loading
+   - Automatic dataset download if not present
+   - Data validation and initial inspection
 
-### Local Development
-- Python 3.8+
-- pip
-- For macOS users:
-  ```bash
-  brew install libomp  # Required for XGBoost
-  ```
+2. Exploratory Data Analysis (EDA)
+   - Data quality assessment
+   - Feature distributions
+   - Target analysis
+   - Feature relationships
 
-### Docker Development
-- Docker
-- Docker Compose
+3. Data Preprocessing
+   - Target encoding
+   - Categorical feature encoding
+   - Numeric feature scaling
+   - Train/validation/test splitting
 
-## Quick Start
+4. Model Development & Training
+   - Cross-validation training
+   - Hyperparameter tuning using GridSearchCV
+   - Final model training with best parameters
+   - MLflow experiment tracking
 
-### Local Development
+5. Model Evaluation
+   - ROC-AUC score
+   - Confusion matrix
+   - Feature importance analysis
+   - Precision-Recall curves
 
-1. Clone the repository:
-```bash
-git clone https://github.com/qiixiangg/q-dev-sagemaker-bank-marketing-prediction.git
-cd q-dev-sagemaker-bank-marketing-prediction
-```
+6. Model Export
+   - Model saving
+   - Metadata export with preprocessing parameters
 
-2. Create and activate a virtual environment:
+### Getting Started with DS Workflow
+
+1. Create and activate a virtual environment:
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-3. Install dependencies:
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Download the data:
+3. Launch Jupyter:
 ```bash
-python scripts/download_data.py
+jupyter notebook
 ```
 
-5. Run the pipeline:
+4. Start the MLflow server:
 ```bash
-python src/pipeline.py
+cd notebooks
+mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns --host 0.0.0.0 --port 5000
+```
+   - MLflow UI will be accessible at http://localhost:5000
+   - Experiments are tracked in SQLite database (mlflow.db)
+   - Artifacts are stored in mlruns directory
+
+5. Open `notebooks/model_development.ipynb` to start the DS workflow
+   - The notebook will automatically:
+     - Download the dataset if not present
+     - Connect to the MLflow server
+   - All preprocessing steps are performed in-memory
+
+## Machine Learning Engineering Workflow
+
+The MLE workflow focuses on deploying and serving the model in production. The workflow integrates with MLflow for model tracking and versioning:
+
+1. Model Artifact Management
+   - MLflow tracked experiments in `mlruns/` directory
+   - Best model exported as `models/xgboost_model.json`
+   - Model metadata stored in `models/model_metadata.json`:
+     - Feature names and types
+     - Label mappings for categorical features
+     - Scaling parameters for numeric features
+     - Model hyperparameters
+     - Performance metrics
+   - Experiment tracking via MLflow UI
+
+2. Model Serving API
+   - FastAPI-based REST API
+   - In-memory preprocessing pipeline
+     - No dependency on serialized preprocessing objects
+     - Stateless transformation using stored parameters
+   - Input validation with Pydantic
+   - Comprehensive error handling
+   - Logging system
+
+### Starting the Model Serving API
+
+1. Ensure virtual environment is activated and dependencies are installed
+
+2. Run the API:
+```bash
+python scripts/run_api.py
 ```
 
-### Docker Development
+3. API will be available at `http://localhost:8000`
 
-1. Build and start the pipeline:
-```bash
-docker-compose up pipeline
-```
+### API Endpoints
 
-## Development
+- `POST /predict`
+  - Accepts JSON payload with feature values
+  - Returns prediction probability and binary prediction
+  - Example:
+    ```bash
+    curl -X POST "http://localhost:8000/predict" \
+         -H "Content-Type: application/json" \
+         -d '{
+             "age": 41,
+             "job": "management",
+             "marital": "married",
+             "education": "university.degree",
+             "default": "no",
+             "housing": "yes",
+             "loan": "no",
+             "contact": "cellular",
+             "month": "may",
+             "day_of_week": "mon",
+             "duration": 240,
+             "campaign": 1,
+             "pdays": -1,
+             "previous": 0,
+             "poutcome": "nonexistent",
+             "emp_var_rate": 1.1,
+             "cons_price_idx": 93.994,
+             "cons_conf_idx": -36.4,
+             "euribor3m": 4.857,
+             "nr_employed": 5191.0
+         }'
+    ```
 
-### Testing Guide
+- `GET /health`
+  - Health check endpoint
+  - Returns service status
 
-#### Local Testing Setup
+## Requirements
 
-Run tests:
-```bash
-python -m pytest tests/
-```
+- Python 3.8+
+- See requirements.txt for package dependencies
 
-#### Docker Testing
+## Project Highlights
 
-Run tests in Docker:
-```bash
-docker-compose run test
-```
+1. **Data Science Best Practices**
+   - Automatic data acquisition
+   - Comprehensive EDA
+   - Cross-validation training
+   - Hyperparameter optimization
+   - MLflow experiment tracking and versioning
+   - Feature importance analysis
+   - Model evaluation metrics
+   - Experiment comparison and visualization
 
-### Starting Jupyter Lab
+2. **Production-Ready Model Serving**
+   - RESTful API with FastAPI
+   - Stateless preprocessing
+   - Strong input validation
+   - Error handling
+   - Logging
+   - Health monitoring
 
-Local:
-```bash
-jupyter lab
-```
-
-Docker:
-```bash
-docker-compose up jupyter
-```
-
-Then open http://localhost:8888 in your browser.
-
-## Model Monitoring
-
-Start the monitoring service:
-
-Local:
-```bash
-python src/monitoring/model_monitor.py
-```
-
-Docker:
-```bash
-docker-compose up monitor
-```
-
-## Configuration
-
-Configuration is managed through Python dictionaries in `src/utils/config.py`. The main configuration sections are:
-
-- Data processing settings
-- Model training parameters
-- Monitoring thresholds and settings
-
-## Docker Services
-
-- `pipeline`: Main ML pipeline
-- `test`: Run tests and linting
-- `monitor`: Model monitoring service
-- `jupyter`: Jupyter Lab environment
-
-## GitHub Setup and CI/CD Pipeline
-
-### Initial Setup
-
-1. Fork and clone the repository
-2. Set up GitHub Secrets:
-   - Go to your repository's Settings > Secrets and variables > Actions
-   - Add the following secrets:
-     ```
-     DOCKERHUB_USERNAME: Your Docker Hub username
-     DOCKERHUB_TOKEN: Your Docker Hub access token
-     ```
-
-### CI/CD Pipeline
-
-The project includes a GitHub Actions workflow that automatically:
-
-1. Runs Python tests:
-   - Installs system dependencies (libomp for XGBoost)
-   - Installs Python dependencies
-   - Downloads and prepares data
-   - Runs pytest
-
-2. Runs Docker tests:
-   - Builds and tests Docker containers
-   - Runs the full pipeline in Docker
-   - Verifies container functionality
-
-3. Builds and pushes Docker images (on main branch):
-   - Builds optimized Docker images
-   - Pushes to Docker Hub with version tags
-   - Uses build caching for faster builds
-
-4. Handles deployment (when configured)
-
-### Development Workflow
-
-1. Create a new branch:
-```bash
-git checkout -b feature/your-feature-name
-```
-
-2. Make your changes and test locally:
-```bash
-# Run tests
-python -m pytest tests/
-
-# Test the full pipeline
-python scripts/download_data.py
-python src/pipeline.py
-```
-
-3. Create a pull request:
-   - The CI pipeline will automatically run tests
-   - All checks must pass before merging
-   - Docker images are built and pushed on merge to main
-
-### Deployment
-
-The pipeline is ready for deployment with:
-- Docker image versioning
-- Build caching
-- Automated testing
-- Directory structure management
-
-To deploy to production:
-1. Merge to main branch
-2. CI/CD pipeline automatically:
-   - Runs all tests
-   - Builds and pushes Docker images
-   - Handles deployment (when configured)
-
-### Monitoring Deployment
-
-Monitor your GitHub Actions:
-1. Go to Actions tab in your repository
-2. Check workflow runs for:
-   - Test results
-   - Build status
-   - Deployment status
-   - Coverage reports
-
-## Production Deployment
-
-Local:
-```bash
-python src/pipeline.py
-```
-
-Docker:
-```bash
-docker build -t bank-marketing:latest .
-docker run -v $(pwd)/data:/app/data -v $(pwd)/models:/app/models bank-marketing:latest
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+3. **Code Quality**
+   - Modular design
+   - Type hints
+   - Documentation
+   - Error handling
+   - Logging
+   - Testing
 
 ## License
 
