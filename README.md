@@ -5,9 +5,6 @@ A production-ready machine learning pipeline for predicting bank marketing campa
 ## Project Structure
 
 ```
-├── config/                 # Configuration files
-│   ├── data/              # Data processing configs
-│   └── model/             # Model training configs
 ├── src/                   # Source code
 │   ├── data/              # Data processing modules
 │   ├── training/          # Model training modules
@@ -87,77 +84,16 @@ docker-compose up pipeline
 
 #### Local Testing Setup
 
-1. Install test dependencies:
+Run tests:
 ```bash
-pip install pytest pytest-cov black flake8
-```
-
-2. Run all tests with coverage:
-```bash
-# From project root
-python -m pytest tests/ --cov=src --cov-report=term-missing
-```
-
-3. Run specific test files:
-```bash
-# Test data processing
-python -m pytest tests/test_data_processor.py -v
-
-# Test model training
-python -m pytest tests/test_model_trainer.py -v
-
-# Test model monitoring
-python -m pytest tests/test_model_monitor.py -v
-```
-
-4. Run tests with detailed output:
-```bash
-python -m pytest -v --cov=src --cov-report=term-missing tests/
-```
-
-#### Code Quality Checks
-
-1. Run code formatting:
-```bash
-# Check formatting
-black --check src/ tests/
-
-# Apply formatting
-black src/ tests/
-```
-
-2. Run linting:
-```bash
-flake8 src/ tests/
+python -m pytest tests/
 ```
 
 #### Docker Testing
 
-1. Run all tests in Docker:
+Run tests in Docker:
 ```bash
 docker-compose run test
-```
-
-2. Run specific test file in Docker:
-```bash
-docker-compose run test python -m pytest tests/test_data_processor.py -v
-```
-
-3. Run tests with linting:
-```bash
-docker-compose run test sh -c "flake8 src/ tests/ && pytest tests/"
-```
-
-#### Continuous Testing During Development
-
-1. Install pytest-watch for continuous testing:
-```bash
-pip install pytest-watch
-```
-
-2. Run tests automatically on file changes:
-```bash
-ptw tests/ -- --cov=src --cov-report=term-missing
 ```
 
 ### Starting Jupyter Lab
@@ -224,8 +160,7 @@ The project includes a GitHub Actions workflow that automatically:
    - Installs system dependencies (libomp for XGBoost)
    - Installs Python dependencies
    - Downloads and prepares data
-   - Runs pytest with coverage
-   - Performs linting checks
+   - Runs pytest
 
 2. Runs Docker tests:
    - Builds and tests Docker containers
@@ -250,10 +185,6 @@ git checkout -b feature/your-feature-name
 ```bash
 # Run tests
 python -m pytest tests/
-
-# Format code
-black src/ tests/
-flake8 src/ tests/
 
 # Test the full pipeline
 python scripts/download_data.py
