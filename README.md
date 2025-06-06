@@ -5,28 +5,6 @@ This project demonstrates a real-world machine learning workflow for predicting 
 1. Data Scientist (DS) workflow for model development
 2. Machine Learning Engineer (MLE) workflow for model deployment
 
-## Project Structure
-
-```
-├── data/                  # Data directory
-│   └── raw/              # Raw data files
-├── models/               # Saved models and artifacts
-│   ├── xgboost_model.json       # Trained model
-│   └── model_metadata.json      # Model metadata
-├── notebooks/            # Jupyter notebooks for DS workflow
-│   ├── model_development.ipynb  # Main DS notebook
-│   ├── mlruns/              # MLflow experiment tracking
-│   └── mlflow.db            # MLflow tracking database
-├── src/                  # Source code
-│   └── serving/         # Model serving (MLE)
-│       ├── __init__.py
-│       ├── app.py       # FastAPI application
-│       └── model_serving.py  # Model serving logic
-├── scripts/             # Utility scripts
-│   └── run_api.py       # API startup script
-└── requirements.txt     # Project dependencies
-```
-
 ## Data Science Workflow
 
 The Data Science workflow is documented in `notebooks/model_development.ipynb` and includes:
@@ -91,7 +69,7 @@ mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./
    - Artifacts are stored in mlruns directory
 
 5. Open `notebooks/model_development.ipynb` to start the DS workflow
-   - The notebook will automatically:
+   - By running the notebook, you will:
      - Download the dataset if not present
      - Connect to the MLflow server
    - All preprocessing steps are performed in-memory
@@ -170,36 +148,8 @@ python scripts/run_api.py
 
 ## Requirements
 
-- Python 3.8+
+- Python 3.10+
 - See requirements.txt for package dependencies
-
-## Project Highlights
-
-1. **Data Science Best Practices**
-   - Automatic data acquisition
-   - Comprehensive EDA
-   - Cross-validation training
-   - Hyperparameter optimization
-   - MLflow experiment tracking and versioning
-   - Feature importance analysis
-   - Model evaluation metrics
-   - Experiment comparison and visualization
-
-2. **Production-Ready Model Serving**
-   - RESTful API with FastAPI
-   - Stateless preprocessing
-   - Strong input validation
-   - Error handling
-   - Logging
-   - Health monitoring
-
-3. **Code Quality**
-   - Modular design
-   - Type hints
-   - Documentation
-   - Error handling
-   - Logging
-   - Testing
 
 ## License
 
