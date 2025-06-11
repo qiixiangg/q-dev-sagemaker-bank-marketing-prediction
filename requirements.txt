@@ -23,3 +23,7 @@ pytest>=7.0.0
 
 # MCP Server Dependencies
 uv>=0.7.6
+
+# AWS & SageMaker Dependencies
+boto3>=1.37.18
+sagemaker>=2.242.0
