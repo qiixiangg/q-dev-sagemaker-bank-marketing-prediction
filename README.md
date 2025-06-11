@@ -29,7 +29,6 @@ The Data Science workflow is documented in `notebooks/model_development.ipynb` a
    - Cross-validation training
    - Hyperparameter tuning using GridSearchCV
    - Final model training with best parameters
-   - MLflow experiment tracking
 
 5. Model Evaluation
    - ROC-AUC score
@@ -59,19 +58,9 @@ pip install -r requirements.txt
 jupyter notebook
 ```
 
-4. Start the MLflow server:
-```bash
-cd notebooks
-mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns --host 0.0.0.0 --port 5000
-```
-   - MLflow UI will be accessible at http://localhost:5000
-   - Experiments are tracked in SQLite database (mlflow.db)
-   - Artifacts are stored in mlruns directory
-
-5. Open `notebooks/model_development.ipynb` to start the DS workflow
+4. Open `notebooks/model_development.ipynb` to start the DS workflow
    - By running the notebook, you will:
      - Download the dataset if not present
-     - Connect to the MLflow server
    - All preprocessing steps are performed in-memory
 
 ## Machine Learning Engineering Workflow
@@ -79,7 +68,6 @@ mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./
 The MLE workflow focuses on deploying and serving the model in production. The workflow integrates with MLflow for model tracking and versioning:
 
 1. Model Artifact Management
-   - MLflow tracked experiments in `mlruns/` directory
    - Best model exported as `models/xgboost_model.json`
    - Model metadata stored in `models/model_metadata.json`:
      - Feature names and types
@@ -87,7 +75,6 @@ The MLE workflow focuses on deploying and serving the model in production. The w
      - Scaling parameters for numeric features
      - Model hyperparameters
      - Performance metrics
-   - Experiment tracking via MLflow UI
 
 2. Model Serving API
    - FastAPI-based REST API
