@@ -43,7 +43,7 @@ class ModelServer:
     - Error handling and logging
     """
     
-    def __init__(self, model_dir: str = "models"):
+    def __init__(self, model_dir: str = "model"):
         """
         Initialize ModelServer.
 

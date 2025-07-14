@@ -33,7 +33,7 @@ bank-marketing-prediction/
 │   └── processed/                # Processed datasets (local copies)
 │       └── preprocess_metadata.json       # Preprocessing metadata
 │
-├── models/
+├── model/
 │   ├── model_metadata.json       # Model metadata and parameters
 │   └── xgboost-model             # Local copy of trained model
 │
