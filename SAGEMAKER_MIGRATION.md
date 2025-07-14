@@ -56,6 +56,7 @@ bank-marketing-prediction/
 │   └── test_preprocess.py
 │
 ├── requirements.txt              # Project dependencies
+├── JUPYTER_NOTEBOOK_FORMAT.md    # Jupyter Notebook structure and guidelines
 ├── README.md                     # Original project documentation
 └── SAGEMAKER_MIGRATION.md        # This migration guide
 ```
