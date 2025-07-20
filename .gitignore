@@ -40,6 +40,7 @@ coverage.xml
 .pytest_cache/
 mlruns/
 mlflow.db
+.amazonq/
 
 # Jupyter Notebook
 .ipynb_checkpoints
