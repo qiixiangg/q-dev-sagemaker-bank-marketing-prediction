@@ -129,10 +129,6 @@ python scripts/run_api.py
          }'
     ```
 
-- `GET /health`
-  - Health check endpoint
-  - Returns service status
-
 ## Requirements
 
 - Python 3.10+
