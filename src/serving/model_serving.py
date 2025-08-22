@@ -58,7 +58,7 @@ class ModelServer:
             self._load_artifacts()
             logger.info("Model server initialized successfully")
         except Exception as e:
-            logger.error(f"Failed to initialize model server: {str(e)}")
+            logger.warning(f"Failed to initialize model server: {str(e)}")
             raise ModelLoadError(f"Failed to load model artifacts: {str(e)}")
 
     def _load_artifacts(self) -> None:
@@ -76,12 +76,12 @@ class ModelServer:
             logger.info(f"Loaded model from {model_path}")
             
             # Load metadata
-            with open(self.model_dir / "model_metadata.json", 'r') as f:
+            with open(self.model_dir / "model_metadata.json", 'r', encoding='utf-8') as f:
                 self.metadata = json.load(f)
             logger.info("Loaded model metadata")
             
         except Exception as e:
-            logger.error(f"Error loading artifacts: {str(e)}")
+            logger.warning(f"Error loading artifacts: {str(e)}")
             raise ModelLoadError(f"Failed to load artifacts: {str(e)}")
 
     def _convert_feature_names(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -190,7 +190,7 @@ class ModelServer:
             return df
             
         except Exception as e:
-            logger.error(f"Preprocessing error: {str(e)}")
+            logger.warning(f"Preprocessing error: {str(e)}")
             raise PreprocessingError(f"Failed to preprocess input: {str(e)}")
 
     def predict(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -235,5 +235,5 @@ class ModelServer:
         except PreprocessingError as e:
             raise e
         except Exception as e:
-            logger.error(f"Prediction error: {str(e)}")
+            logger.warning(f"Prediction error: {str(e)}")
             raise PredictionError(f"Failed to generate prediction: {str(e)}")
